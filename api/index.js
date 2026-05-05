@@ -14,10 +14,10 @@ const cache = new LRUCache({
 
 // 限流：IP 记录（也使用LRU缓存避免内存泄漏）
 const rateLimit = new LRUCache({
-  max: 10000, // 最多记录10000个IP
-  ttl: 2 * RATE_WINDOW, // 保留时间略长于窗口期
+  max: 10000,
+  ttl: 2 * RATE_WINDOW,
 });
-const RATE_MAX = 60; // 每分钟 60 次
+const RATE_MAX = 60;
 const RATE_WINDOW = 60 * 1000;
 
 module.exports = async (req, res) => {
@@ -28,10 +28,10 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // 获取客户端 IP（处理X-Forwarded-For可能包含多个IP的情况）
+  // 获取客户端 IP
   let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
   if (typeof ip === 'string') {
-    ip = ip.split(',')[0].trim(); // 取第一个IP地址
+    ip = ip.split(',')[0].trim();
   }
 
   // 验证TMDB_TOKEN是否存在
@@ -59,8 +59,8 @@ module.exports = async (req, res) => {
 
     // 代理 TMDB 图片
     if (url.startsWith('/t/p/')) {
-      const imgUrl = TMDB_IMG + url;
-      const img = await axios.get(imgUrl, { responseType: 'arraybuffer' });
+      const imageUrl = TMDB_IMG + url;
+      const img = await axios.get(imageUrl, { responseType: 'arraybuffer' });
       const contentType = img.headers['content-type'];
       res.setHeader('Content-Type', contentType);
       res.setHeader('Cache-Control', 'max-age=31536000');
@@ -89,6 +89,7 @@ module.exports = async (req, res) => {
     return res.json(response.data);
 
   } catch (e) {
+    console.error('Error:', e);
     const status = e.response?.status || 500;
     const data = e.response?.data || { msg: '服务器错误' };
     res.status(status).json(data);
